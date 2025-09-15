@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Сыр 'Пармезан'",
+    "description": "Твердый сыр с выдержкой 12 месяцев. Насыщенный вкус с ореховыми нотками.",
+    "price": 1250,
+    "imageUrl": "https://i.imgur.com/8QZkF2I.jpeg"
+  },
+  {
+    "id": 2,
+    "name": "Сыр 'Бри'",
+    "description": "Мягкий сыр с белой плесенью. Нежный, сливочный вкус.",
+    "price": 750,
+    "imageUrl": "https://i.imgur.com/gT6a5p0.jpeg"
+  },
+  {
+    "id": 3,
+    "name": "Сыр 'Дорблю'",
+    "description": "Полутвердый сыр с голубой плесенью. Умеренно острый и пикантный.",
+    "price": 900,
+    "imageUrl": "https://i.imgur.com/Y3W1n9m.jpeg"
+  },
+  {
+    "id": 4,
+    "name": "Сыр 'Гауда'",
+    "description": "Голландский полутвердый сыр. Мягкий, кремовый вкус.",
+    "price": 600,
+    "imageUrl": "https://i.imgur.com/jA8aP2E.jpeg"
+  },
+  {
+    "id": 5,
+    "name": "Сыр 'Чеддер'",
+    "description": "Классический английский сыр. От мягкого до острого вкуса.",
+    "price": 700,
+    "imageUrl": "https://i.imgur.com/uVQPk0X.jpeg"
+  },
+  {
+    "id": 6,
+    "name": "Сыр 'Моцарелла'",
+    "description": "Свежий итальянский сыр, идеален для пиццы и салатов.",
+    "price": 550,
+    "imageUrl": "https://i.imgur.com/pYqfW5d.jpeg"
+  }
+]
