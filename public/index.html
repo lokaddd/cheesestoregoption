@@ -1,42 +1,6 @@
+
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
-
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.2.1/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.2.1/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.2.1/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
-
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
 <html lang="ru">
-
 <head>
   <title>Сыроварня Любимая</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -47,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
     rel="stylesheet">
-
   <style>
     :root {
       --dl-color-gray-500: #595959;
@@ -85,21 +48,17 @@
       --dl-space-space-threeunits: 48px;
       --dl-space-space-oneandhalfunits: 24px;
     }
-
     html {
       line-height: 1.15;
     }
-
     body {
       margin: 0;
     }
-
     * {
       box-sizing: border-box;
       border-width: 0;
       border-style: solid;
     }
-
     p,
     li,
     ul,
@@ -117,11 +76,9 @@
       margin: 0;
       padding: 0;
     }
-
     button {
       background-color: transparent;
     }
-
     button,
     input,
     optgroup,
@@ -132,19 +89,16 @@
       line-height: 1.15;
       margin: 0;
     }
-
     button,
     select {
       text-transform: none;
     }
-
     button,
     [type="button"],
     [type="reset"],
     [type="submit"] {
       -webkit-appearance: button;
     }
-
     button::-moz-focus-inner,
     [type="button"]::-moz-focus-inner,
     [type="reset"]::-moz-focus-inner,
@@ -152,36 +106,29 @@
       border-style: none;
       padding: 0;
     }
-
     button:-moz-focus,
     [type="button"]:-moz-focus,
     [type="reset"]:-moz-focus,
     [type="submit"]:-moz-focus {
       outline: 1px dotted ButtonText;
     }
-
     a {
       color: inherit;
       text-decoration: inherit;
     }
-
     input {
       padding: 2px 4px;
     }
-
     img {
       display: block;
     }
-
     html {
       scroll-behavior: smooth
     }
-
     html {
       font-family: Montserrat;
       font-size: 16px;
     }
-
     body {
       font-weight: 400;
       font-style: normal;
@@ -192,7 +139,6 @@
       color: #ffffff;
       background-color: #1e1e1e;
     }
-
     .button {
       color: var(--dl-color-gray-black);
       display: inline-block;
@@ -210,8 +156,6 @@
         color: #14213d;
         border-color: #fca311;
     }
-
-
     /* Common Component Styles */
     .app-header {
       width: 100%;
@@ -227,7 +171,6 @@
       background-color: #1e1e1e;
       border-bottom: 1px solid #444;
     }
-
     .header-logo {
       color: #ffc300;
       font-size: 24px;
@@ -235,26 +178,22 @@
       line-height: 1;
       text-align: center;
     }
-
     .header-logo-sub {
       font-size: 20px;
       font-weight: 500;
     }
-
     .app-nav {
       display: flex;
       align-items: center;
       flex-direction: row;
       gap: 24px;
     }
-
     .app-nav-link {
       color: #e5e5e5;
       font-weight: 500;
       text-decoration: none;
       transition: color 0.3s;
     }
-
     .app-nav-link:hover {
       color: #ffc300;
     }
@@ -263,12 +202,10 @@
         gap: 20px;
         align-items: center;
     }
-
     .cart-widget {
         position: relative;
         cursor: pointer;
     }
-
     .cart-widget-icon {
         width: 28px;
         height: 28px;
@@ -278,7 +215,6 @@
     .cart-widget:hover .cart-widget-icon {
         fill: #ffc300;
     }
-
     .cart-count {
         position: absolute;
         top: -8px;
@@ -300,14 +236,12 @@
       align-items: center;
       justify-content: center;
     }
-
     .burger-menu-icon {
       fill: #e5e5e5;
       width: 24px;
       height: 24px;
       cursor: pointer;
     }
-
     .mobile-menu {
       top: 0px;
       left: 0px;
@@ -327,7 +261,6 @@
         display: flex;
         transform: translateX(0);
     }
-
     .mobile-menu-header {
         width: 100%;
         display: flex;
@@ -335,14 +268,12 @@
         justify-content: flex-end;
         margin-bottom: 20px;
     }
-
     .close-mobile-menu-icon {
         fill: var(--dl-color-gray-white);
         width: 24px;
         height: 24px;
         cursor: pointer;
     }
-
     .mobile-nav {
       display: flex;
       flex-direction: column;
@@ -358,7 +289,6 @@
     .mobile-nav-link:hover {
         color: #ffc300;
     }
-
     .app-footer {
       width: 100%;
       display: flex;
@@ -395,7 +325,6 @@
     .footer-icon:hover {
         fill: #ffc300;
     }
-
     main {
         min-height: calc(100vh - 200px);
         width: 100%;
@@ -419,7 +348,6 @@
       <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
     </div>
     <p id="load">Firebase SDK Loading&hellip;</p>
-
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const loadEl = document.querySelector('#load');
@@ -437,7 +365,6 @@
         // firebase.performance(); // call to activate
         //
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
         try {
           let app = firebase.app();
           let features = [
@@ -465,8 +392,6 @@
           display: none;
       }
     }
-
-
     /* Home Page */
     .home-banner {
         display: flex;
@@ -488,7 +413,6 @@
         font-size: 1.25rem;
         margin-bottom: var(--dl-space-space-twounits);
     }
-
     /* About page */
     .about-us-container {
       width: 100%;
@@ -522,7 +446,6 @@
       font-size: 1rem;
       text-align: center;
     }
-
     @media(max-width: 767px) {
       .about-us-stats {
         padding-left: var(--dl-space-space-twounits);
@@ -538,7 +461,6 @@
         padding-bottom: var(--dl-space-space-twounits);
       }
     }
-
     /* Contacts page */
     .contacts-features {
       width: 100%;
@@ -611,7 +533,6 @@
              grid-template-columns: 1fr;
          }
      }
-
     /* Catalog Page */
     .page-title {
         font-size: 2.5rem;
@@ -686,7 +607,6 @@
     .product-card-button:hover {
       background-color: #e6b200;
     }
-
     /* Product Details Page */
     .product-detail-container {
         display: flex;
@@ -742,7 +662,6 @@
             flex-direction: column;
         }
     }
-
     /* Auth Page */
     .auth-container {
         display: grid;
@@ -797,7 +716,6 @@
     </script>
   </body>
     }
-
     /* Cart Page */
     .cart-item {
         display: flex;
@@ -877,7 +795,6 @@
         font-size: 1.5rem;
         margin-bottom: 2rem;
     }
-
     /* Profile Page & Order Success */
     .profile-welcome, .order-success-message {
         font-size: 1.5rem;
@@ -900,10 +817,8 @@
     .logout-button {
         margin-top: 2rem;
     }
-
   </style>
 </head>
-
 <body>
   <header class="app-header">
     <a href="#" class="header-logo">
@@ -950,9 +865,7 @@
         </nav>
     </div>
   </header>
-
   <main id="app-root"></main>
-
   <footer class="app-footer">
     <img alt="logo" src="https://uploads-ssl.webflow.com/602f50d140b9c71da633c706/603144419951234720610f4_favicon.png" class="footer-logo" />
     <span class="footer-text">
@@ -976,7 +889,6 @@
       </svg>
     </div>
   </footer>
-
   <!-- TEMPLATES -->
   <template id="home-page-template">
     <div class="home-banner">
@@ -985,7 +897,6 @@
       <a href="#catalog" class="button">Смотреть продукцию</a>
     </div>
   </template>
-
   <template id="about-page-template">
     <div class="about-us-stats">
       <div class="about-us-stat">
@@ -1006,7 +917,6 @@
       </div>
     </div>
   </template>
-
   <template id="contacts-page-template">
     <div class="contacts-features">
       <h1>Контакты</h1>
@@ -1046,12 +956,10 @@
       </div>
     </div>
   </template>
-
   <template id="catalog-page-template">
     <h1 class="page-title">Наша Продукция</h1>
     <div id="product-grid" class="product-grid"></div>
   </template>
-
   <template id="product-page-template">
     <div class="product-detail-container">
         <div class="product-detail-image-wrapper">
@@ -1065,7 +973,6 @@
         </div>
     </div>
   </template>
-
   <template id="auth-page-template">
     <div class="auth-container">
         <form id="login-form" class="auth-form">
@@ -1100,13 +1007,11 @@
         </form>
     </div>
   </template>
-
   <template id="cart-page-template">
     <h1 class="page-title">Корзина</h1>
     <div id="cart-items-container"></div>
     <div id="cart-summary" class="cart-summary"></div>
   </template>
-
   <template id="profile-page-template">
     <h1 class="page-title">Личный кабинет</h1>
     <p class="profile-welcome">Добро пожаловать, <span id="profile-username"></span>!</p>
@@ -1116,14 +1021,11 @@
     </div>
     <button id="logout-button" class="button logout-button">Выйти</button>
   </template>
-
   <template id="order-success-template">
     <h1 class="page-title">Заказ успешно оформлен!</h1>
     <p class="order-success-message">Спасибо за покупку! Мы свяжемся с вами в ближайшее время для подтверждения деталей.</p>
     <a href="#catalog" class="button">Продолжить покупки</a>
   </template>
-
   <script type="module" src="app.js"></script>
 </body>
-
 </html>
