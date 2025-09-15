@@ -1,85 +1,164 @@
-// api.js
-import { db, auth } from './firebase.js';
-import { collection, doc, getDocs, setDoc, addDoc, query, where } from "firebase/firestore";
-import { signInWithPhoneNumber } from "firebase/auth";
+// app.js
+import * as api from './api.js';
+import * as cart from './cart.js';
+import { auth, createRecaptcha } from './firebase.js';
+import { onAuthStateChanged } from "firebase/auth";
 
-// Коллекции
-const usersCol = collection(db, "users");
-const productsCol = collection(db, "products");
-const ordersCol = collection(db, "orders");
+window.addEventListener('DOMContentLoaded', async () => {
+  const appRoot = document.getElementById('app-root');
+  const state = { currentUser: null, confirmationResult: null };
 
-/**
- * Отправить код на телефон. Принимает phoneNumber (строка) и appVerifier (RecaptchaVerifier).
- * Возвращает confirmationResult (нужно сохранить на клиенте для подтверждения кода).
- */
-export async function sendPhoneCode(phoneNumber, appVerifier) {
-  if (!phoneNumber) throw new Error('Номер телефона обязателен');
-  if (!appVerifier) throw new Error('appVerifier (recaptcha) обязателен');
-  const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-  // confirmationResult.confirm(code) — для подтверждения
-  return confirmationResult;
-}
+  cart.loadCart();
 
-/**
- * Подтверждение кода (confirmationResult.confirm(code)) — логика выполняется на клиенте (см. app.js).
- * После успешного входа/регистрации — создаём профиль в Firestore, если его нет.
- */
-export async function ensureUserDoc(user) {
-  if (!user || !user.uid) return;
-  const uid = user.uid;
-  const userSnapshot = await getDocs(query(usersCol, where("__name__", "==", uid)));
-  if (userSnapshot.empty) {
-    // создаём базовый профиль; если у пользователя есть phoneNumber - сохраняем
-    const data = {
-      phoneNumber: user.phoneNumber || null,
-      ordersHistory: [],
-      createdAt: new Date().toISOString(),
-    };
-    await setDoc(doc(usersCol, uid), data);
-    return { id: uid, ...data };
-  } else {
-    const docSnap = userSnapshot.docs[0];
-    return { id: docSnap.id, ...docSnap.data() };
-  }
-}
+  const renderer = {
+    render(templateId) {
+      const tpl = document.getElementById(templateId);
+      if (!tpl) {
+        appRoot.innerHTML = `<p>Ошибка: шаблон #${templateId} не найден</p>`;
+        return;
+      }
+      appRoot.innerHTML = '';
+      appRoot.appendChild(tpl.content.cloneNode(true));
+    },
+    async renderHomePage() { renderer.render('home-page-template'); },
+    async renderCatalogPage() {
+      renderer.render('catalog-page-template');
+      const products = await api.getProducts();
+      const grid = document.getElementById('product-grid');
+      if(!grid) return;
+      grid.innerHTML = products.map(p => `
+        <a href="#product/${p.id}" class="product-card">
+          <img src="${p.imageUrl}" alt="${p.name}">
+          <div>
+            <h3>${p.name}</h3>
+            <p style="color:#bbb">${p.description.substring(0,70)}...</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <span style="font-weight:600">${p.price} ₽</span>
+              <button class="button" data-action="add-to-cart" data-product-id="${p.id}">В корзину</button>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    },
+    async renderProductPage(id) {
+      const product = await api.getProductById(id);
+      if (!product) { appRoot.innerHTML = '<p>Товар не найден</p>'; return; }
+      renderer.render('product-page-template');
+      document.querySelector('.product-detail-name').textContent = product.name;
+      document.querySelector('.product-detail-desc').textContent = product.description;
+      document.querySelector('.product-detail-price').textContent = `${product.price} ₽`;
+      const btn = document.querySelector('[data-action="add-to-cart"]');
+      if (btn) btn.dataset.productId = product.id;
+    },
+    renderAuthPage() {
+      renderer.render('auth-page-template');
+      setupAuthHandlers();
+    }
+  };
 
-// ====== PRODUCTS ======
-export const getProducts = async () => {
-  const snapshot = await getDocs(productsCol);
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-};
+  // ===== Router =====
+  const router = {
+    routes: {
+      '': renderer.renderHomePage,
+      '#': renderer.renderHomePage,
+      '#catalog': renderer.renderCatalogPage,
+      '#product': renderer.renderProductPage,
+      '#auth': renderer.renderAuthPage,
+    },
+    handle() {
+      const hash = window.location.hash || '#';
+      const [path, param] = hash.split('/');
+      const handler = this.routes[path] || this.routes[''];
+      if (handler) handler(param);
+    }
+  };
 
-export const getProductById = async (id) => {
-  const snapshot = await getDocs(productsCol);
-  const product = snapshot.docs.find(d => d.id === id);
-  return product ? { id: product.id, ...product.data() } : null;
-};
+  window.addEventListener('hashchange', () => router.handle());
+  router.handle();
 
-// ====== ORDERS ======
-export const createOrder = async ({ userId, items, totalAmount }) => {
-  const orderRef = await addDoc(ordersCol, {
-    userId,
-    items,
-    totalAmount,
-    status: "В обработке",
-    createdAt: new Date().toISOString()
+  // Global handlers
+  appRoot.addEventListener('click', e => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const { action, productId } = target.dataset;
+    if (action === 'add-to-cart') cart.addToCart(productId || target.dataset.productId);
   });
 
-  // Обновим историю пользователя
-  const userRef = doc(usersCol, userId);
-  const userSnapshot = await getDocs(query(usersCol, where("__name__", "==", userId)));
-  if (!userSnapshot.empty) {
-    const userDoc = userSnapshot.docs[0];
-    const data = userDoc.data();
-    const ordersHistory = data.ordersHistory || [];
-    ordersHistory.push(orderRef.id);
-    await setDoc(userRef, { ...data, ordersHistory });
+  // ===== Auth handling: phone auth =====
+  function setupAuthHandlers() {
+    const sendForm = document.getElementById('phone-send-form');
+    const verifyForm = document.getElementById('phone-verify-form');
+    const phoneInput = document.getElementById('phone-number');
+    const smsInput = document.getElementById('sms-code');
+    const sendError = document.getElementById('send-error');
+    const verifyError = document.getElementById('verify-error');
+    const sendBtn = document.getElementById('send-code-button');
+    const confirmBtn = document.getElementById('confirm-code-button');
+
+    // Инициализация reCAPTCHA (invisible) — рендерим в #recaptcha-container
+    let appVerifier = createRecaptcha('recaptcha-container', 'invisible');
+
+    sendBtn.addEventListener('click', async () => {
+      sendError.textContent = '';
+      const phone = phoneInput.value.trim();
+      if (!phone) { sendError.textContent = 'Введите номер телефона'; return; }
+      try {
+        // Отправляем СМС
+        const confirmationResult = await api.sendPhoneCode(phone, appVerifier);
+        state.confirmationResult = confirmationResult;
+        sendForm.style.display = 'none';
+        verifyForm.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        sendError.textContent = err.message || 'Ошибка отправки SMS';
+        // попробуем снова пересоздать reCAPTCHA
+        appVerifier = createRecaptcha('recaptcha-container', 'invisible');
+      }
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+      verifyError.textContent = '';
+      const code = smsInput.value.trim();
+      if (!code) { verifyError.textContent = 'Введите код из SMS'; return; }
+      try {
+        const confirmationResult = state.confirmationResult;
+        if (!confirmationResult) { verifyError.textContent = 'Повторно отправьте код'; return; }
+        // Подтверждение кода — возвращает userCredential
+        const userCredential = await confirmationResult.confirm(code);
+        const user = userCredential.user;
+        await api.ensureUserDoc(user); // создаём профиль в Firestore, если нужно
+        // После успешного входа — обновляем state/currentUser
+        state.currentUser = user;
+        // Перейдём в профиль/главную
+        window.location.hash = '#/';
+      } catch (err) {
+        console.error(err);
+        verifyError.textContent = err.message || 'Неверный код';
+      }
+    });
   }
 
-  return { id: orderRef.id, userId, items, totalAmount, status: "В обработке" };
-};
+  // Подписка на состояние аутентификации (можно показать профиль/кнопку выхода)
+  onAuthStateChanged(auth, user => {
+    state.currentUser = user;
+    // Здесь можно обновить UI (показать кнопку "Выйти" и имя)
+    // Например: если пользователь есть — показать ссылку "Личный кабинет"
+    const nav = document.querySelector('.app-nav');
+    if (!nav) return;
+    const exist = nav.querySelector('.profile-link');
+    if (user) {
+      if (!exist) {
+        const a = document.createElement('a');
+        a.href = '#profile';
+        a.className = 'profile-link';
+        a.textContent = user.phoneNumber || 'Профиль';
+        nav.insertBefore(a, nav.querySelector('.button'));
+      } else {
+        exist.textContent = user.phoneNumber || 'Профиль';
+      }
+    } else {
+      if (exist) exist.remove();
+    }
+  });
 
-export const getOrdersByUserId = async (userId) => {
-  const snapshot = await getDocs(query(ordersCol, where("userId", "==", userId)));
-  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-};
+});
