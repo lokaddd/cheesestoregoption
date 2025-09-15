@@ -1,78 +1,85 @@
-// app.js
-import * as api from './api.js';
-import * as cart from './cart.js';
-import { auth } from './firebase.js';
+// api.js
+import { db, auth } from './firebase.js';
+import { collection, doc, getDocs, setDoc, addDoc, query, where } from "firebase/firestore";
+import { signInWithPhoneNumber } from "firebase/auth";
 
-window.addEventListener('DOMContentLoaded', async () => {
-  const appRoot = document.getElementById('app-root');
-  const state = { currentUser: null };
+// Коллекции
+const usersCol = collection(db, "users");
+const productsCol = collection(db, "products");
+const ordersCol = collection(db, "orders");
 
-  cart.loadCart();
+/**
+ * Отправить код на телефон. Принимает phoneNumber (строка) и appVerifier (RecaptchaVerifier).
+ * Возвращает confirmationResult (нужно сохранить на клиенте для подтверждения кода).
+ */
+export async function sendPhoneCode(phoneNumber, appVerifier) {
+  if (!phoneNumber) throw new Error('Номер телефона обязателен');
+  if (!appVerifier) throw new Error('appVerifier (recaptcha) обязателен');
+  const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+  // confirmationResult.confirm(code) — для подтверждения
+  return confirmationResult;
+}
 
-  const renderer = {
-    render(templateId) {
-      const tpl = document.getElementById(templateId);
-      if (!tpl) {
-        appRoot.innerHTML = `<p>Ошибка: шаблон #${templateId} не найден</p>`;
-        return;
-      }
-      appRoot.innerHTML = '';
-      appRoot.appendChild(tpl.content.cloneNode(true));
-    },
-    async renderHomePage() { renderer.render('home-page-template'); },
-    async renderCatalogPage() {
-      renderer.render('catalog-page-template');
-      const products = await api.getProducts();
-      const grid = document.getElementById('product-grid');
-      if(!grid) return;
-      grid.innerHTML = products.map(p => `
-        <a href="#product/${p.id}" class="product-card">
-          <img src="${p.imageUrl}" alt="${p.name}" class="product-card-image">
-          <div class="product-card-content">
-            <h3 class="product-card-name">${p.name}</h3>
-            <p class="product-card-desc">${p.description.substring(0, 70)}...</p>
-            <div class="product-card-footer">
-              <span class="product-card-price">${p.price} ₽</span>
-              <button class="product-card-button" data-action="add-to-cart" data-product-id="${p.id}">В корзину</button>
-            </div>
-          </div>
-        </a>
-      `).join('');
-    },
-    async renderProductPage(id) {
-      const product = await api.getProductById(id);
-      if (!product) { appRoot.innerHTML = '<p>Товар не найден</p>'; return; }
-      renderer.render('product-page-template');
-      document.querySelector('.product-detail-name').textContent = product.name;
-      document.querySelector('.product-detail-desc').textContent = product.description;
-      document.querySelector('.product-detail-price').textContent = `${product.price} ₽`;
-    }
-  };
+/**
+ * Подтверждение кода (confirmationResult.confirm(code)) — логика выполняется на клиенте (см. app.js).
+ * После успешного входа/регистрации — создаём профиль в Firestore, если его нет.
+ */
+export async function ensureUserDoc(user) {
+  if (!user || !user.uid) return;
+  const uid = user.uid;
+  const userSnapshot = await getDocs(query(usersCol, where("__name__", "==", uid)));
+  if (userSnapshot.empty) {
+    // создаём базовый профиль; если у пользователя есть phoneNumber - сохраняем
+    const data = {
+      phoneNumber: user.phoneNumber || null,
+      ordersHistory: [],
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(doc(usersCol, uid), data);
+    return { id: uid, ...data };
+  } else {
+    const docSnap = userSnapshot.docs[0];
+    return { id: docSnap.id, ...docSnap.data() };
+  }
+}
 
-  // ======= Router =======
-  const router = {
-    routes: {
-      '': renderer.renderHomePage,
-      '#': renderer.renderHomePage,
-      '#catalog': renderer.renderCatalogPage,
-      '#product': renderer.renderProductPage
-    },
-    handle() {
-      const hash = window.location.hash || '#';
-      const [path, param] = hash.split('/');
-      const handler = this.routes[path] || this.routes[''];
-      if (handler) handler(param);
-    }
-  };
+// ====== PRODUCTS ======
+export const getProducts = async () => {
+  const snapshot = await getDocs(productsCol);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+};
 
-  window.addEventListener('hashchange', () => router.handle());
-  router.handle();
+export const getProductById = async (id) => {
+  const snapshot = await getDocs(productsCol);
+  const product = snapshot.docs.find(d => d.id === id);
+  return product ? { id: product.id, ...product.data() } : null;
+};
 
-  // ======= Global Click Handlers =======
-  appRoot.addEventListener('click', e => {
-    const target = e.target.closest('[data-action]');
-    if (!target) return;
-    const { action, productId } = target.dataset;
-    if (action === 'add-to-cart') cart.addToCart(productId);
+// ====== ORDERS ======
+export const createOrder = async ({ userId, items, totalAmount }) => {
+  const orderRef = await addDoc(ordersCol, {
+    userId,
+    items,
+    totalAmount,
+    status: "В обработке",
+    createdAt: new Date().toISOString()
   });
-});
+
+  // Обновим историю пользователя
+  const userRef = doc(usersCol, userId);
+  const userSnapshot = await getDocs(query(usersCol, where("__name__", "==", userId)));
+  if (!userSnapshot.empty) {
+    const userDoc = userSnapshot.docs[0];
+    const data = userDoc.data();
+    const ordersHistory = data.ordersHistory || [];
+    ordersHistory.push(orderRef.id);
+    await setDoc(userRef, { ...data, ordersHistory });
+  }
+
+  return { id: orderRef.id, userId, items, totalAmount, status: "В обработке" };
+};
+
+export const getOrdersByUserId = async (userId) => {
+  const snapshot = await getDocs(query(ordersCol, where("userId", "==", userId)));
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+};
